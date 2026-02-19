@@ -27,7 +27,7 @@ A complete solution for deploying Splunk Enterprise on MicroK8s with automated l
 │  │                        └──────────────────────────────────┘   │  │
 │  └────────────────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────────────┘
-`# claw-splunk-mkhelm
+# claw-splunk-mkhelm
 
 > **OpenClaw Skill** — Idempotent Splunk deployment on MicroK8s via Helm.  
 > Detects if Splunk is installed, installs it if missing, configures HEC,  
