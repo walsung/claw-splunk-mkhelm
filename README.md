@@ -111,14 +111,7 @@ check, or continuing past a failure it didn't recognise. Every explicit `if`
 check, every hardcoded port, every `.state/` gate file exists to give the AI
 **one fewer decision to get wrong.**
 
-| Concern | Ansible Playbook | This Skill (Explicit Bash) |
-|---|---|---|
-| **AI hallucination risk** | Higher — agent may infer wrong module args | Lower — every command is literal and exact |
-| **Hanging risk** | Silent blocks on become, SSH, gather_facts | Explicit `--timeout` guards on every network call |
-| **State visibility** | Internal to Ansible — AI cannot inspect mid-run | `.state/` files the agent can read and reason on |
-| **Failure clarity** | Verbose YAML task output is hard for AI to parse | Plain exit codes and `tee` log lines are unambiguous |
-| **Idempotency** | Depends on module quality | Every check is explicit and handwritten |
-| **Dependencies** | Requires ansible, collections, Python env | Only needs bash, curl, microk8s — always present |
+
 
 ### Why One Phase at a Time
 
@@ -409,15 +402,14 @@ Do NOT proceed to Phase 5 until log forwarding is confirmed.
 **What Phase 4 does:**
 - Auto-detects the OpenClaw log file path (falls back to journald)
 - Skips reinstall if forwarder is already running with the same HEC token (idempotent)
-- Installs `/usr/local/bin/openclaw-splunk-forwarder.sh`
+- Installs `/usr/local/bin/openclaw-splunk-forwarder.py`
 - Creates and enables systemd service `openclaw-splunk-forwarder`
 - Sends logs to Splunk HEC on port `8088`
 - Waits 30 seconds then verifies events appear in Splunk `index=main`
 
 **Check forwarder status at any time:**
 ```bash
-systemctl status openclaw-splunk-forwarder --no-pager
-journalctl -u openclaw-splunk-forwarder -n 50 --no-pager
+tail -F /tmp/openclaw/openclaw-*.log
 ```
 
 **Expected output:**
@@ -527,8 +519,8 @@ curl -s http://127.0.0.1:8088/services/collector/event \
   -d '{"event":"test","sourcetype":"openclaw"}'
 
 # Check log forwarder
-systemctl status openclaw-splunk-forwarder --no-pager
-journalctl -u openclaw-splunk-forwarder -n 50 --no-pager
+tail -F /tmp/openclaw/openclaw-*.log
+
 
 # Check port-forward service
 systemctl status splunk-portforward --no-pager
@@ -549,7 +541,7 @@ microk8s kubectl delete namespace splunk
 sudo systemctl stop openclaw-splunk-forwarder
 sudo systemctl disable openclaw-splunk-forwarder
 sudo rm /etc/systemd/system/openclaw-splunk-forwarder.service
-sudo rm /usr/local/bin/openclaw-splunk-forwarder.sh
+sudo rm /usr/local/bin/openclaw-splunk-forwarder.py
 sudo systemctl daemon-reload
 
 # Remove port-forward service

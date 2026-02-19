@@ -26,7 +26,7 @@ FORWARDER_PY='/usr/local/bin/openclaw-splunk-forwarder.py'
 
 sudo tee "$FORWARDER_PY" > /dev/null << 'PYEOF'
 #!/usr/bin/env python3
-"""Splunk HEC Forwarder - Monitors OpenClaw (journald) and /var/log/syslog"""
+"""Splunk HEC Forwarder - Monitors OpenClaw ("bash", "-c", "tail -F /tmp/openclaw/openclaw-*.log") and /var/log/syslog"""
 import json, subprocess, sys, time, urllib.request, threading, os
 
 HEC_TOKEN = os.environ.get('HEC_TOKEN', '')
@@ -87,7 +87,7 @@ class SplunkForwarder:
         print(f"[{time.strftime('%H:%M:%S')}] Forwarder starting...")
         print(f"[{time.strftime('%H:%M:%S')}] HEC URL: {HEC_URL}")
         threads = [
-            threading.Thread(target=self.monitor_stream, args=(["journalctl", "-u", "openclaw", "-f", "--no-pager", "-o", "cat"], "openclaw"), daemon=True),
+            threading.Thread(target=self.monitor_stream, args=(["bash", "-c", "tail -F /tmp/openclaw/openclaw-*.log"], "openclaw"), daemon=True),
             threading.Thread(target=self.monitor_stream, args=(["tail", "-F", "/var/log/syslog"], "syslog"), daemon=True),
             threading.Thread(target=self.periodic_flush, daemon=True)
         ]
