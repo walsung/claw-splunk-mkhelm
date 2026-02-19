@@ -4,7 +4,7 @@ A complete solution for deploying Splunk Enterprise on MicroK8s with automated l
 
 ## Architecture
 
-```
+
 ┌──────────────────────────────────────────────────────────────────────┐
 │                         HOST SYSTEM                                  │
 │                                                                      │
