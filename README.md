@@ -4,7 +4,7 @@ A complete solution for deploying Splunk Enterprise on MicroK8s with automated l
 
 ## Architecture
 
-
+```
 ┌──────────────────────────────────────────────────────────────────────┐
 │                         HOST SYSTEM                                  │
 │                                                                      │
@@ -27,6 +27,8 @@ A complete solution for deploying Splunk Enterprise on MicroK8s with automated l
 │  │                        └──────────────────────────────────┘   │  │
 │  └────────────────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────────────┘
+```
+
 # claw-splunk-mkhelm
 
 > **OpenClaw Skill** — Idempotent Splunk deployment on MicroK8s via Helm.  
