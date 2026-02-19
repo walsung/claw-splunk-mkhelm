@@ -23,7 +23,7 @@ A complete solution for deploying Splunk Enterprise on MicroK8s with automated l
 │  │  │ Splunk       │─────▶│  Standalone Instance             │   │  │
 │  │  │ Operator     │      │  • Web: 8000, HEC: 8088          │   │  │
 │  │  │ (Helm)       │      │  • Volumes: 5Gi etc / 20Gi var   │   │  │
-│  │  └──────────────┘      │  • ClusterIP: 10.152.183.118     │   │  │
+│  │  └──────────────┘      │  • ClusterIP: 10.xx.xx.xxx       │   │  │
 │  │                        └──────────────────────────────────┘   │  │
 │  └────────────────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────────────┘
@@ -77,7 +77,7 @@ A complete solution for deploying Splunk Enterprise on MicroK8s with automated l
 ├── phase4-forwarder.sh           ← Forward OpenClaw logs to Splunk
 ├── phase5-dashboard.sh           ← Create Splunk operations dashboard
 ├── uninstall.sh                  ← Full teardown
-└── .state/                       ← Phase gate files (auto-generated)
+└── .state/                       ← Phase gate files (auto-generated)(gitignored)
     ├── phase1.state
     ├── phase2.state
     ├── phase3.state
@@ -553,6 +553,58 @@ sudo systemctl daemon-reload
 # Remove state and credentials
 rm -rf ~/.openclaw/skills/splunk-k8s/.state
 ```
+
+---
+
+## Troubleshooting
+
+### HEC unresponsive  
+
+Make sure the kubectl port-forward splunk 8089 to the host port 8089
+
+```
+microk8s kubectl port-forward \
+  svc/splunk-splunk-enterprise-standalone-service \
+  -n splunk \
+  8000:8000 8088:8088 8089:8089 9997:9997 \
+  --address 0.0.0.0
+```
+
+Enable HEC globally
+```
+
+REAL_PASSWORD=$(microk8s kubectl get secret \
+  splunk-splunk-enterprise-standalone-secret-v1 \
+  -n splunk \
+  -o jsonpath='{.data.password}' | base64 -d)
+
+echo "Real password: ${REAL_PASSWORD}"
+
+
+curl -sk \
+  -u admin:${REAL_PASSWORD} \
+  https://127.0.0.1:8089/services/data/inputs/http/http \
+  -d enableSSL=0 \
+  -d disabled=0 \
+  -d port=8088
+```
+
+test with the hec forwarder python script, it should run correclty
+```
+ubuntu@ubuntu2404:~$ /usr/bin/python3 /usr/local/bin/openclaw-splunk-forwarder.py
+[2026-02-19 05:47:18.263634] Splunk forwarder starting...
+[2026-02-19 05:47:18.263680] HEC URL     : http://127.0.0.1:8088/services/collector/event
+[2026-02-19 05:47:18.263691] OpenClaw log: /tmp/openclaw/openclaw-2026-02-19.log
+[2026-02-19 05:47:18.263694] Batch size  : 50 events or 3s
+[2026-02-19 05:47:18.263698] Testing HEC connectivity...
+[2026-02-19 05:47:18.282284] ✅ HEC connectivity OK
+[2026-02-19 05:47:18.282513] Monitoring OpenClaw log: /tmp/openclaw/openclaw-2026-02-19.log
+[2026-02-19 05:47:18.282557] Started thread: monitor_openclaw
+[2026-02-19 05:47:18.283017] Monitoring syslog: /var/log/syslog
+[2026-02-19 05:47:18.283211] Started thread: monitor_syslog
+```
+
+
 
 ---
 
