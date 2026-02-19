@@ -1,0 +1,5 @@
+.state/
+*.state
+splunk-creds.env
+setup.log
+/tmp/
