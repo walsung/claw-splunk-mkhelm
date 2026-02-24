@@ -147,7 +147,15 @@ The human language prompt is what replaces it tomorrow.
 ---
 
 
+## Youtube Video Demos  
 
+
+### OpenClaw Part1 - an AI-powered Cyber Security Engineer
+OpenClaw Skill Auto-Deploy Splunk Helm, Syslog HEC, Custom Dashboard on MicroK8s
+https://youtu.be/zYc-MJvOdgI
+
+### OpenClaw Part2 - Scaling k8s Log Onboarding and Report Generation
+https://youtu.be/lrOlymX_51A
 
 ---
 
