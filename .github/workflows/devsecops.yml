@@ -1,6 +1,11 @@
-name: Call DevSecOps
-on: [push]
+name: Call Central DevSecOps
+on:
+  push:
+    branches: [ development, main ]
+  pull_request:
+    branches: [ development, main ]
+
 jobs:
-  security:
+  run-security:
     uses: walsung/shared-actions/.github/workflows/devsecops.yml@main
     secrets: inherit
