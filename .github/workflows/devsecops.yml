@@ -10,8 +10,20 @@ on:
       - development
       - main
 
+
+# ──────────────────────────────────────────────
+# ADD THIS BLOCK: Deny all by default at top level.
+# Individual jobs override with only what they need.
+# ──────────────────────────────────────────────
+permissions:
+  contents: read        # Allow checkout only
+  actions: read         # Allow reading workflow state
+  security-events: none # Blocked at top level; enabled per job only
+
+
 env:
   REGISTRY: ghcr.io
+
 
 jobs:
   # ──────────────────────────────────────────────
@@ -53,7 +65,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'python', 'javascript' ] # Add your languages here
+        language: [ 'python', 'javascript', 'bash' ] # Add your languages here
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -131,7 +143,7 @@ jobs:
           echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@v3
 
       - name: Extract Docker metadata
         id: meta
