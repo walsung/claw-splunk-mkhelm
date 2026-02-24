@@ -66,15 +66,10 @@ jobs:
         run: pip install bandit
 
       - name: Run Bandit scan
-        run: |
-          bandit -r . \
-            --exclude ./.git,./node_modules \
-            -ll \               # Only flag MEDIUM severity and above
-            -f json \
-            -o bandit-report.json || true
+        run: bandit -r . --exclude ./.git,./node_modules -ll -f json -o bandit-report.json || true
 
       - name: Print Bandit summary
-        run: bandit -r . --exclude ./.git -ll || true
+        run: bandit -r . --exclude ./.git,./node_modules -ll || true
 
       - name: Upload Bandit report
         uses: actions/upload-artifact@v4
