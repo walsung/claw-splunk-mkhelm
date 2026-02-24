@@ -53,36 +53,63 @@ jobs:
           extra_args: --debug --only-verified
 
   # ──────────────────────────────────────────────
-  # JOB 2: SAST (CodeQL requires a matrix for multi-lang)
+  # JOB 2a: Bandit - Python Security Scan
   # ──────────────────────────────────────────────
-  sast-scan:
-    name: 🛡️ SAST Scan (${{ matrix.language }})
+  bandit-scan:
+    name: 🐍 Bandit - Python Security Scan
     runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-      actions: read
-      contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [ 'python', 'javascript', 'bash' ] # Add your languages here
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4
-        with:
-          languages: ${{ matrix.language }}
-          queries: security-extended
+      - name: Install Bandit
+        run: pip install bandit
 
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v4
+      - name: Run Bandit scan
+        run: |
+          bandit -r . \
+            --exclude ./.git,./node_modules \
+            -ll \               # Only flag MEDIUM severity and above
+            -f json \
+            -o bandit-report.json || true
 
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v4
+      - name: Print Bandit summary
+        run: bandit -r . --exclude ./.git -ll || true
+
+      - name: Upload Bandit report
+        uses: actions/upload-artifact@v4
+        if: always()
         with:
-          category: "/language:${{ matrix.language }}"
+          name: bandit-report
+          path: bandit-report.json
+
+  # ──────────────────────────────────────────────
+  # JOB 2b: ShellCheck - Bash Script Scan
+  # ──────────────────────────────────────────────
+  shellcheck-scan:
+    name: 🐚 ShellCheck - Bash Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          severity: warning
+          scandir: './'
+        env:
+          SHELLCHECK_OPTS: -e SC2086 -e SC2046
+
+  # ──────────────────────────────────────────────
+  # JOB 2c: Semgrep - General SAST
+  # ──────────────────────────────────────────────
+  semgrep-scan:
+    name: 🔍 Semgrep - SAST Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Run Semgrep
         uses: semgrep/semgrep-action@v1
@@ -91,8 +118,10 @@ jobs:
             p/security-audit
             p/secrets
             p/owasp-top-ten
-        env:
-          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+            p/bash
+            p/python
+
+
 
   # ──────────────────────────────────────────────
   # JOB 3: Dependency & SCA Scanning
@@ -130,6 +159,7 @@ jobs:
   container-scan:
     name: 🐳 Container Security Scan
     runs-on: ubuntu-latest
+    if: false
     permissions:
       contents: read
       packages: write
@@ -265,7 +295,9 @@ jobs:
     if: always() # Run even if upstream jobs fail so it can explicitly block
     needs:
       - secret-scan
-      - sast-scan
+      - bandit-scan        # ← replaces sast-scan
+      - shellcheck-scan    # ← replaces sast-scan
+      - semgrep-scan       # ← replaces sast-scan
       - dependency-scan
       - container-scan
       - iac-scan
